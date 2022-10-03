@@ -108,12 +108,12 @@ func (cli *app) runInternal(decode bool, in io.Reader) error {
 	for scanner.Scan() {
 		src := scanner.Bytes()
 		if decode {
-			result, err = processLine(src, func(in []byte) []byte {
+			result, err = processLine(src, func(in []byte) ([]byte, error) {
 				return base62.StdEncoding.DecodeString(string(in))
 			})
 		} else {
-			result, err = processLine(src, func(in []byte) []byte {
-				return []byte(base62.StdEncoding.EncodeToString(in))
+			result, err = processLine(src, func(in []byte) ([]byte, error) {
+				return []byte(base62.StdEncoding.EncodeToString(in)), nil
 			})
 		}
 		if err != nil {
@@ -127,7 +127,7 @@ func (cli *app) runInternal(decode bool, in io.Reader) error {
 	return status
 }
 
-func processLine(src []byte, f func([]byte) []byte) ([]byte, error) {
+func processLine(src []byte, f func([]byte) ([]byte, error)) ([]byte, error) {
 	var i, j int
 	var res []byte
 	for j < len(src) {
@@ -137,7 +137,10 @@ func processLine(src []byte, f func([]byte) []byte) ([]byte, error) {
 		} else {
 			j = len(src)
 		}
-		got := f(src[i:j])
+		got, err := f(src[i:j])
+		if err != nil {
+			return nil, err
+		}
 		res = append(res, got...)
 		if j == len(src) {
 			break

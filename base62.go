@@ -53,7 +53,7 @@ var bigRadix = [...]*big.Int{
 var bigRadix10 = big.NewInt(62 * 62 * 62 * 62 * 62 * 62 * 62 * 62 * 62 * 62) // 62^10
 
 // Decode decodes a modified base62 string to a byte slice.
-func (e * Encoding) DecodeString(b string) []byte {
+func (e * Encoding) DecodeString(b string) ([]byte, error) {
 	answer := big.NewInt(0)
 	tmp := new(big.Int)
 
@@ -65,11 +65,11 @@ func (e * Encoding) DecodeString(b string) []byte {
 
 		total := uint64(0)
 		for _, v := range t[:n] {
-			ch := e.decodeMap[v]
-			if ch == 255 {
-				return []byte("")
+			c := e.decodeMap[v]
+			if c == 255 {
+				return nil, fmt.Errorf("invalid character '%c' in decoding a base62 string '%s'", c, b)
 			}
-			total = total*62 + uint64(ch)
+			total = total*62 + uint64(c)
 		}
 
 		answer.Mul(answer, bigRadix[n])
@@ -91,7 +91,7 @@ func (e * Encoding) DecodeString(b string) []byte {
 	val := make([]byte, flen)
 	copy(val[numZeros:], tmpval)
 
-	return val
+	return val, nil
 }
 
 // Encode encodes a byte slice to a modified base62 string.

@@ -75,7 +75,7 @@ func TestBase62(t *testing.T) {
 			t.Errorf("Encode test #%d failed: got: %s want: %s",
 				x, res, test.out)
 			continue
-		} else if rev := base62.StdEncoding.DecodeString(res); !bytes.Equal(tmp, rev) {
+		} else if rev, _ := base62.StdEncoding.DecodeString(res); !bytes.Equal(tmp, rev) {
 			t.Errorf("Decode test #%d failed: got: %q want: %q",
 				x, rev, tmp)
 			continue
@@ -90,7 +90,7 @@ func TestBase62(t *testing.T) {
 			continue
 		}
 
-		if res := base62.StdEncoding.DecodeString(test.out); !bytes.Equal(res, b) {
+		if res, _ := base62.StdEncoding.DecodeString(test.out); !bytes.Equal(res, b) {
 			t.Errorf("Decode test #%d failed: got: %q want: %q",
 				x, res, base62.StdEncoding.EncodeToString(b))
 			continue
@@ -99,7 +99,7 @@ func TestBase62(t *testing.T) {
 
 	// Decode with invalid input
 	for x, test := range invalidStringTests {
-		if res := base62.StdEncoding.DecodeString(test.in); string(res) != test.out {
+		if res, _ := base62.StdEncoding.DecodeString(test.in); string(res) != test.out {
 			t.Errorf("Decode invalidString test #%d failed: got: %q want: %q",
 				x, res, test.out)
 			continue
