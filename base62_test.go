@@ -1,6 +1,7 @@
-/**
-  Copyright (c) 2022 Zander Schwid & Co. LLC. All rights reserved.
-*/
+/*
+ * Copyright (c) 2025 Karagatan LLC.
+ * SPDX-License-Identifier: BUSL-1.1
+ */
 
 package base62_test
 
@@ -8,7 +9,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	"github.com/schwid/base62"
+	"go.arpabet.com/base62"
 	"math"
 	"math/rand"
 	"testing"
