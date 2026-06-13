@@ -163,6 +163,42 @@ func TestDecodeUint64Overflow(t *testing.T) {
 	}
 }
 
+// TestDecodeToUint64Invalid verifies that invalid characters are rejected
+// rather than silently decoded (the decodeMap sentinel is 255, and the guard
+// must compare against it explicitly since the index is an unsigned byte).
+func TestDecodeToUint64Invalid(t *testing.T) {
+	for _, src := range []string{"!!!", "abc?", "/", "él"} {
+		if got, err := base62.StdEncoding.DecodeToUint64(src); err == nil {
+			t.Errorf("DecodeToUint64(%q) = %d, want an error", src, got)
+		}
+	}
+}
+
+// TestDecodeStringInvalid verifies that malformed input is rejected with an
+// error (and never panics), including non-ASCII bytes and invalid UTF-8.
+func TestDecodeStringInvalid(t *testing.T) {
+	for _, src := range []string{"abc?", "ab\xffcd", "héllo", "\x80", "????"} {
+		got, err := base62.StdEncoding.DecodeString(src)
+		if err == nil {
+			t.Errorf("DecodeString(%q) = %q, want an error", src, got)
+		}
+	}
+}
+
+// TestDecodeStringNoPanic feeds random/arbitrary bytes through the decoder and
+// asserts it returns (cleanly or with an error) without panicking.
+func TestDecodeStringNoPanic(t *testing.T) {
+	r := rand.New(rand.NewSource(1))
+	buf := make([]byte, 64)
+	for i := 0; i < 10000; i++ {
+		n := r.Intn(len(buf) + 1)
+		for j := 0; j < n; j++ {
+			buf[j] = byte(r.Intn(256))
+		}
+		_, _ = base62.StdEncoding.DecodeString(string(buf[:n]))
+	}
+}
+
 func marshallUint64(n uint64) []byte {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, n)

@@ -65,10 +65,11 @@ func (e * Encoding) DecodeString(b string) ([]byte, error) {
 		}
 
 		total := uint64(0)
-		for _, v := range t[:n] {
+		for k := 0; k < n; k++ {
+			v := t[k]
 			c := e.decodeMap[v]
 			if c == 255 {
-				return nil, fmt.Errorf("invalid character '%c' in decoding a base62 string '%s'", c, b)
+				return nil, fmt.Errorf("invalid character '%c' in decoding a base62 string '%s'", v, b)
 			}
 			total = total*62 + uint64(c)
 		}
@@ -159,7 +160,7 @@ func (e *Encoding) DecodeToUint64(src string) (uint64, error) {
 	var n, m uint64
 	var i byte
 	for _, c := range []byte(src) {
-		if i = e.decodeMap[c]; i < 0 {
+		if i = e.decodeMap[c]; i == 255 {
 			return 0, fmt.Errorf("invalid character '%c' in decoding a base62 string %q", c, src)
 		}
 		m = n*radix + uint64(i)
