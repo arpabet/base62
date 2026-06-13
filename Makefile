@@ -6,8 +6,15 @@ all: build
 clean:
 	go clean -i ./...
 
-test:
+vet:
+	go vet ./...
+
+test: vet
 	go test -cover ./...
+
+fuzz:
+	go test -run='^$$' -fuzz='FuzzRoundTrip' -fuzztime=30s .
+	go test -run='^$$' -fuzz='FuzzDecode$$' -fuzztime=30s .
 
 build: test
 	go build ./...

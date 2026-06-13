@@ -19,10 +19,9 @@ import (
 )
 
 type app struct {
-
-	name string
+	name    string
 	version string
-	build string
+	build   string
 
 	inStream  io.Reader
 	outStream io.Writer
@@ -30,17 +29,17 @@ type app struct {
 }
 
 type flagopts struct {
-	Decode   bool             `short:"D" long:"decode" description:"decodes input"`
-	Input    []string         `short:"i" long:"input" default:"-" description:"input file"`
-	Output   string           `short:"o" long:"output" default:"-" description:"output file"`
-	Version  bool             `short:"v" long:"version" description:"print version"`
+	Decode  bool     `short:"D" long:"decode" description:"decodes input"`
+	Input   []string `short:"i" long:"input" default:"-" description:"input file"`
+	Output  string   `short:"o" long:"output" default:"-" description:"output file"`
+	Version bool     `short:"v" long:"version" description:"print version"`
 }
 
-func Run(name, version, build  string) error {
+func Run(name, version, build string) error {
 	return (&app{
-		name: name,
-		version: version,
-		build: build,
+		name:      name,
+		version:   version,
+		build:     build,
 		inStream:  os.Stdin,
 		outStream: os.Stdout,
 		errStream: os.Stderr,

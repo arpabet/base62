@@ -20,3 +20,8 @@ jobs:
 
       - name: Build
         run: make
+
+      - name: Fuzz (smoke)
+        run: |
+          go test -run='^$' -fuzz='FuzzRoundTrip' -fuzztime=20s .
+          go test -run='^$' -fuzz='FuzzDecode$' -fuzztime=20s .
