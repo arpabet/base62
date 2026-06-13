@@ -199,6 +199,92 @@ func TestDecodeStringNoPanic(t *testing.T) {
 	}
 }
 
+// TestNewInvalidAlphabet verifies that New rejects malformed alphabets instead
+// of silently building a corrupt decode table.
+func TestNewInvalidAlphabet(t *testing.T) {
+	cases := map[string][]byte{
+		"empty":      []byte(""),
+		"too short":  []byte("0123456789"),
+		"too long":   []byte("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0"),
+		"duplicates": []byte("00123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY"),
+	}
+	for name, alphabet := range cases {
+		func() {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("New(%s) did not panic", name)
+				}
+			}()
+			_ = base62.New(alphabet)
+		}()
+	}
+}
+
+// TestBufferAPI checks that the Encode/Decode buffer methods agree with the
+// string methods, round-trip cleanly, and stay within the advertised length
+// bounds, across edge cases and random inputs (including leading zero bytes).
+func TestBufferAPI(t *testing.T) {
+	enc := base62.StdEncoding
+	r := rand.New(rand.NewSource(2))
+
+	inputs := [][]byte{
+		{},
+		{0x00},
+		{0x00, 0x00, 0x00},
+		{0xff},
+		{0x00, 0x01, 0x02, 0xff},
+	}
+	for i := 0; i < 200; i++ {
+		b := make([]byte, r.Intn(80))
+		for j := range b {
+			b[j] = byte(r.Intn(256))
+		}
+		// Force leading zeros on some inputs.
+		if i%3 == 0 && len(b) > 2 {
+			b[0], b[1] = 0, 0
+		}
+		inputs = append(inputs, b)
+	}
+
+	for _, in := range inputs {
+		// Encode buffer vs string.
+		dst := make([]byte, enc.EncodedLen(len(in)))
+		n := enc.Encode(dst, in)
+		gotStr := enc.EncodeToString(in)
+		if string(dst[:n]) != gotStr {
+			t.Fatalf("Encode(% x) = %q, EncodeToString = %q", in, dst[:n], gotStr)
+		}
+		if n > enc.EncodedLen(len(in)) {
+			t.Fatalf("Encode wrote %d bytes, exceeds EncodedLen %d", n, enc.EncodedLen(len(in)))
+		}
+
+		// Decode buffer vs string, and full round-trip.
+		ddst := make([]byte, enc.DecodedLen(n))
+		dn, err := enc.Decode(ddst, dst[:n])
+		if err != nil {
+			t.Fatalf("Decode(%q) error: %v", dst[:n], err)
+		}
+		if !bytes.Equal(ddst[:dn], in) {
+			t.Fatalf("round-trip mismatch: got % x want % x", ddst[:dn], in)
+		}
+		strDec, err := enc.DecodeString(gotStr)
+		if err != nil {
+			t.Fatalf("DecodeString(%q) error: %v", gotStr, err)
+		}
+		if !bytes.Equal(strDec, in) {
+			t.Fatalf("DecodeString round-trip mismatch: got % x want % x", strDec, in)
+		}
+	}
+}
+
+// TestDecodeBufferInvalid verifies the buffer Decode reports invalid characters.
+func TestDecodeBufferInvalid(t *testing.T) {
+	dst := make([]byte, 16)
+	if _, err := base62.StdEncoding.Decode(dst, []byte("abc?")); err == nil {
+		t.Error("Decode of invalid input returned no error")
+	}
+}
+
 func marshallUint64(n uint64) []byte {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, n)

@@ -1,6 +1,6 @@
 module go.arpabet.com/base62
 
-go 1.17
+go 1.25
 
 require github.com/jessevdk/go-flags v1.5.0
 
