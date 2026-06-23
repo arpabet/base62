@@ -8,6 +8,8 @@ package base62
 import (
 	"fmt"
 	"math/big"
+
+	"golang.org/x/xerrors"
 )
 
 const (
@@ -78,7 +80,7 @@ func (e *Encoding) DecodeString(b string) ([]byte, error) {
 			v := t[k]
 			c := e.decodeMap[v]
 			if c == 255 {
-				return nil, fmt.Errorf("invalid character '%c' in decoding a base62 string '%s'", v, b)
+				return nil, xerrors.Errorf("invalid character '%c' in decoding a base62 string '%s'", v, b)
 			}
 			total = total*62 + uint64(c)
 		}
@@ -189,7 +191,7 @@ func (e *Encoding) Decode(dst, src []byte) (int, error) {
 		for k := 0; k < n; k++ {
 			c := e.decodeMap[t[k]]
 			if c == 255 {
-				return 0, fmt.Errorf("invalid character '%c' in decoding a base62 string '%s'", t[k], src)
+				return 0, xerrors.Errorf("invalid character '%c' in decoding a base62 string '%s'", t[k], src)
 			}
 			total = total*62 + uint64(c)
 		}
@@ -240,11 +242,11 @@ func (e *Encoding) DecodeToUint64(src string) (uint64, error) {
 	var i byte
 	for _, c := range []byte(src) {
 		if i = e.decodeMap[c]; i == 255 {
-			return 0, fmt.Errorf("invalid character '%c' in decoding a base62 string %q", c, src)
+			return 0, xerrors.Errorf("invalid character '%c' in decoding a base62 string %q", c, src)
 		}
 		m = n*radix + uint64(i)
 		if m < n {
-			return 0, fmt.Errorf("overflow in decoding a base62 string %q", src)
+			return 0, xerrors.Errorf("overflow in decoding a base62 string %q", src)
 		}
 		n = m
 	}
